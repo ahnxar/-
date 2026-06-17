@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>우리성 인터랙티브 리포트</title>
+  <meta name="description" content="한국의 우리성을 서구 개인주의와 비교하는 인터랙티브 웹페이지" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root,[data-theme="light"]{
+      --text-xs:clamp(.75rem,.7rem + .25vw,.875rem);
+      --text-sm:clamp(.875rem,.8rem + .35vw,1rem);
+      --text-base:clamp(1rem,.95rem + .25vw,1.125rem);
+      --text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);
+      --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+      --text-2xl:clamp(2rem,1.2rem + 2.5vw,3.5rem);
+      --text-3xl:clamp(2.5rem,1rem + 4vw,5rem);
+      --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;--space-12:3rem;--space-16:4rem;--space-20:5rem;
+      --color-bg:#f6f3ee;--color-surface:#fbfaf7;--color-surface-2:#f0ece6;--color-border:#d8d1c8;--color-text:#201d18;--color-text-muted:#6d6860;--color-text-faint:#9b958c;--color-primary:#0f5f63;--color-primary-2:#3f878d;--color-accent:#aa6a2c;--color-blue:#3b6ea8;--shadow:0 10px 30px rgba(31,22,14,.08);--radius:22px;
+      --font-body:'IBM Plex Sans KR',sans-serif;--font-display:'Instrument Serif',serif;
+    }
+    [data-theme="dark"]{
+      --color-bg:#171412;--color-surface:#201c19;--color-surface-2:#2a2521;--color-border:#3a342f;--color-text:#f1ece5;--color-text-muted:#b1a89e;--color-text-faint:#7e766e;--color-primary:#7bc0c4;--color-primary-2:#4f989f;--color-accent:#d89d62;--color-blue:#8fb2e1;--shadow:0 10px 30px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--font-body);background:var(--color-bg);color:var(--color-text);line-height:1.65;font-size:var(--text-base)}
+    a{color:inherit;text-decoration:none}
+    img,canvas{max-width:100%;display:block}
+    .container{width:min(1120px,calc(100% - 2rem));margin:0 auto}
+    .skip{position:absolute;left:-9999px}.skip:focus{left:1rem;top:1rem;background:var(--color-surface);padding:.5rem 1rem;z-index:20}
+
+    /* 학생 정보 배너 */
+    .author-bar{background:var(--color-surface-2);border-bottom:1px solid var(--color-border);padding:.65rem 0}
+    .author-bar .container{display:flex;align-items:center;gap:var(--space-6);font-size:var(--text-sm);color:var(--color-text-muted)}
+    .author-bar strong{color:var(--color-text);font-weight:600}
+
+    header{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--color-bg) 82%, transparent);backdrop-filter:blur(16px);border-bottom:1px solid color-mix(in srgb,var(--color-text) 10%, transparent)}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:var(--space-4) 0;gap:var(--space-4)}
+    .brand{display:flex;align-items:center;gap:.75rem;font-weight:700}
+    .logo{width:34px;height:34px;border:1px solid var(--color-border);border-radius:50%;display:grid;place-items:center;background:var(--color-surface)}
+    .navlinks{display:flex;gap:1rem;font-size:var(--text-sm);color:var(--color-text-muted);flex-wrap:wrap}
+    .theme-toggle{border:1px solid var(--color-border);background:var(--color-surface);padding:.6rem;border-radius:999px;cursor:pointer}
+    main section{padding:clamp(3rem,8vw,6rem) 0}
+    .hero{padding-top:clamp(4rem,10vw,8rem)}
+    .eyebrow{font-size:var(--text-sm);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);margin-bottom:var(--space-3)}
+    h1,h2,h3{line-height:1.08}
+    h1{font-family:var(--font-display);font-size:var(--text-3xl);max-width:11ch;font-weight:400}
+    h2{font-size:var(--text-2xl);margin-bottom:var(--space-4)}
+    h3{font-size:var(--text-lg);margin-bottom:.6rem}
+    .hero-grid,.split,.cards,.compare-grid,.timeline{display:grid;gap:var(--space-8)}
+    .hero-grid{grid-template-columns:1.2fr .8fr;align-items:end}
+    .lede{max-width:60ch;color:var(--color-text-muted);margin-top:var(--space-5)}
+    .hero-card,.card,.quote,.chart-card,.timeline-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .hero-card{padding:var(--space-6)}
+    .stat{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);margin-top:var(--space-5)}
+    .stat div{padding:var(--space-4);background:var(--color-surface-2);border-radius:18px}
+    .stat strong{display:block;font-size:var(--text-xl);font-variant-numeric:tabular-nums;color:var(--color-primary)}
+    .section-intro{max-width:64ch;color:var(--color-text-muted);margin-bottom:var(--space-8)}
+    .cards{grid-template-columns:repeat(3,1fr)}
+    .card{padding:var(--space-6)}
+    .chip{display:inline-block;font-size:var(--text-xs);padding:.35rem .7rem;border-radius:999px;background:color-mix(in srgb,var(--color-primary) 12%, var(--color-surface));color:var(--color-primary);margin-bottom:1rem}
+    .compare-grid{grid-template-columns:1fr 1fr}
+    .chart-card{padding:var(--space-6)}
+    .chart-wrap{position:relative;height:360px}
+    .domain-table{width:100%;border-collapse:collapse;margin-top:var(--space-4);font-size:var(--text-sm)}
+    .domain-table th,.domain-table td{padding:.9rem;border-top:1px solid var(--color-border);vertical-align:top;text-align:left}
+    .domain-table th{color:var(--color-text-muted);font-weight:500}
+    .timeline{grid-template-columns:repeat(2,1fr)}
+    .timeline-card{padding:var(--space-6)}
+    .quote{padding:var(--space-8);font-size:var(--text-lg)}
+    .quote p{max-width:34ch}
+
+    /* 참고문헌 섹션 */
+    .ref-list{list-style:none;counter-reset:refs}
+    .ref-list li{counter-increment:refs;display:grid;grid-template-columns:2rem 1fr;gap:.4rem;padding:.8rem 0;border-top:1px solid var(--color-border);font-size:var(--text-sm);color:var(--color-text-muted);line-height:1.6}
+    .ref-list li::before{content:counter(refs)".";color:var(--color-primary);font-weight:600;padding-top:.05rem}
+    .ref-list .ref-authors{font-weight:500;color:var(--color-text)}
+    .ref-list .ref-year{color:var(--color-text-muted)}
+    .ref-list .ref-title{font-style:italic}
+    .ref-list .ref-source{}
+
+    footer{padding:3rem 0 5rem;color:var(--color-text-muted)}
+    .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease, transform .7s ease}
+    .reveal.visible{opacity:1;transform:none}
+    @media (max-width: 900px){
+      .hero-grid,.compare-grid,.cards,.timeline{grid-template-columns:1fr}
+      .stat{grid-template-columns:1fr}
+      .navlinks{display:none}
+      .chart-wrap{height:300px}
+      .author-bar .container{flex-direction:column;align-items:flex-start;gap:.3rem}
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#content">본문으로 건너뛰기</a>
+
+  <!-- 학생 정보 배너 -->
+  <div class="author-bar">
+    <div class="container">
+      <span><strong>학번</strong> 1111</span>
+      <span><strong>이름</strong> 안아라</span>
+    </div>
+  </div>
+
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M4 12c4-7 12-7 16 0-4 7-12 7-16 0Z"></path>
+            <circle cx="12" cy="12" r="2.8"></circle>
+          </svg>
+        </div>
+        <span>우리성 인터랙티브 리포트</span>
+      </div>
+      <nav class="navlinks" aria-label="섹션 이동">
+        <a href="#concept">개념</a>
+        <a href="#dimensions">6차원</a>
+        <a href="#domains">행동 양식</a>
+        <a href="#hofstede">홉스테드</a>
+        <a href="#sources">참고문헌</a>
+      </nav>
+      <button class="theme-toggle" data-theme-toggle aria-label="다크 모드 전환">◐</button>
+    </div>
+  </header>
+
+  <main id="content">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">Korean We-ness / Uri-seong</div>
+          <h1>한국의 '우리성'을 서구 개인주의와 비교해 읽는 문화심리 웹페이지</h1>
+          <p class="lede">이 페이지는 최상진의 문화심리학과 후속 연구를 바탕으로, 한국의 집단 심리가 단순한 '집단주의'가 아니라 관계적 자아와 정서적 유대, 눈치, 심리적 지지의 구조로 작동한다는 점을 시각적으로 보여준다. 또한 전통사회와 현대사회를 나누어 변화와 지속을 함께 읽을 수 있도록 구성했다.</p>
+        </div>
+        <aside class="hero-card reveal">
+          <div class="chip">핵심 포인트</div>
+          <p>한국은 홉스테드 지표에서 개인주의 점수 18로 낮게 나타나며, 미국은 91로 매우 높다. 이 차이는 단순한 수치 비교를 넘어 의사소통, 의사결정, 갈등 해결 방식의 차이로 이어진다.</p>
+          <div class="stat">
+            <div><strong>18</strong><span>한국 개인주의(IDV)</span></div>
+            <div><strong>91</strong><span>미국 개인주의(IDV)</span></div>
+            <div><strong>85</strong><span>한국 불확실성 회피(UAI)</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="concept">
+      <div class="container">
+        <h2>'우리성'은 무엇인가</h2>
+        <p class="section-intro">최상진은 한국인의 심리 구조를 설명하기 위해 '정', '한', '체면', '눈치', '우리성' 같은 토착 개념을 제시했다. 여기서 우리성은 개인이 독립된 원자처럼 존재하기보다, 자신이 속한 관계망 속에서 자아를 이해하고 행동을 조정하는 경향을 뜻한다.</p>
+        <div class="compare-grid">
+          <article class="card reveal">
+            <div class="chip">한국적 우리성</div>
+            <h3>관계 안에서 형성되는 자아</h3>
+            <p>'우리 집', '우리 엄마', '우리 학교'처럼 한국어의 '우리'는 소유보다 소속과 정체성을 드러낸다. 이는 공동체의 경계와 정서적 연결이 자아 표현에 직접 개입한다는 점을 보여준다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="chip">서구 개인주의</div>
+            <h3>독립적 자아와 명시적 선택</h3>
+            <p>서구 개인주의는 자율성, 개인 권리, 자기결정의 가치를 강조한다. 따라서 집단 조화보다 개인의 의사, 명확한 의견 표명, 계약적 관계가 더 중요하게 다뤄지는 경향이 있다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="dimensions">
+      <div class="container">
+        <h2>우리성의 6가지 차원</h2>
+        <p class="section-intro">대시보드의 6개 구성 요소를 바탕으로, 한국 사회의 전통적 맥락과 현대적 맥락을 함께 비교하도록 정리했다. 이는 이준웅·박혜원(2019)이 실증 규명한 우리성 하위 차원과 최상진(2011)의 이론을 결합하여 재구성한 프레임이다.</p>
+        <div class="cards">
+          <article class="card reveal"><div class="chip">1</div><h3>공유하는 정체성</h3><p>개인은 자신을 '나'보다 '우리'의 일부로 인식한다. 전통사회에서는 문중·촌락·가문, 현대에는 학교·회사·팬덤·온라인 공동체가 이 역할을 이어받는다.</p></article>
+          <article class="card reveal"><div class="chip">2</div><h3>집단주의</h3><p>집단 목표와 조화를 개인의 독자적 선호보다 우선하는 성향이다. 두레, 향약, 계와 같은 전통 제도는 그 역사적 기반을 보여준다.</p></article>
+          <article class="card reveal"><div class="chip">3</div><h3>경계 투과성</h3><p>내집단과 외집단의 경계가 완전히 고정되지 않고 관계에 따라 확장되거나 조정된다. '같은 학교', '같은 지역', '아는 사람의 지인'이 빠르게 관계 자원이 되는 이유다.</p></article>
+          <article class="card reveal"><div class="chip">4</div><h3>정(情)</h3><p>오랜 시간 축적된 정서적 유대다. 계산보다 관계 유지가 우선될 때 자주 등장하며, 최인재·최상진(2002)은 이를 한국인의 문화적 대응 방식과 연결해 실증 분석했다.</p></article>
+          <article class="card reveal"><div class="chip">5</div><h3>눈치</h3><p>말하지 않은 감정과 위계를 읽는 사회적 감각이다. 한국의 고맥락 의사소통을 이해하는 핵심 개념으로, 최상진(2011)은 이를 우리성과 함께 한국 사회심리의 핵심 축으로 분류했다.</p></article>
+          <article class="card reveal"><div class="chip">6</div><h3>심리적 지지</h3><p>집단 내부에서 정서적·실질적 도움을 주고받는 구조다. 이준웅·박혜원(2019)의 연구에서 긍정적 집단주의의 하위 차원으로 분류되었으며, 건설적 커뮤니케이션 행위와 정적 상관관계를 보였다.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container compare-grid">
+        <article class="chart-card reveal">
+          <h3>우리성 6차원 강도 비교</h3>
+          <p class="section-intro">정량 데이터가 아닌 개념 비교용 시각화다. 한국의 우리성 구조가 서구 개인주의 문화보다 관계적 요소에서 더 높은 강도를 보인다는 해석을 나타낸다.</p>
+          <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+        </article>
+        <article class="chart-card reveal" id="hofstede">
+          <h3>홉스테드 문화 차원: 한국 vs 미국</h3>
+          <p class="section-intro">Hofstede(1980)의 비교문화 연구 수치. 한국은 높은 권력거리(60)와 불확실성 회피(85), 낮은 개인주의(18)를 보이며, 미국은 이와 대조적이다.</p>
+          <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="domains">
+      <div class="container">
+        <h2>행동 양식에서 나타나는 차이</h2>
+        <p class="section-intro">의사소통, 의사결정, 갈등 해결의 세 영역에서 한국과 서구 문화의 차이를 비교했다. 이준웅·박혜원(2019)의 커뮤니케이션 연구 및 정태연 외(2010)의 역사문화 분석을 기반으로 정리했다.</p>
+        <div class="card reveal">
+          <table class="domain-table">
+            <thead>
+              <tr><th>영역</th><th>한국 전통사회</th><th>한국 현대사회</th><th>서구 개인주의 문화</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>의사소통</td><td>침묵, 맥락, 위계, 간접 표현 중심</td><td>회의·학교·직장에서 여전히 눈치와 완곡 표현이 중요</td><td>직접적 표현, 명확한 의견 제시, 저맥락 소통</td></tr>
+              <tr><td>의사결정</td><td>연장자·권위자 중심, 집단 조화 우선</td><td>형식적으로는 수평화되었지만 실제로는 합의와 분위기 고려가 큼</td><td>개인의 선택, 토론, 계약적 합의가 상대적으로 강함</td></tr>
+              <tr><td>갈등 해결</td><td>체면과 관계 유지를 위해 비공식 조정 선호</td><td>법적 절차가 늘었지만 관계 손상을 피하려는 경향 지속</td><td>권리 주장, 명시적 규칙, 제도적 해결 선호</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container timeline">
+        <article class="timeline-card reveal">
+          <div class="chip">전통사회 기반</div>
+          <h3>두레·향약·계의 공동체 구조</h3>
+          <p>벼농사 중심 사회에서 협업은 생존 전략이었다. 두레와 향약은 노동과 규범을 공동으로 관리했고, 이 과정에서 개인보다 공동체 유지가 우선되는 가치가 강화되었다(정태연 외, 2010).</p>
+        </article>
+        <article class="timeline-card reveal">
+          <div class="chip">현대적 변형</div>
+          <h3>회사·학교·온라인 커뮤니티로의 이동</h3>
+          <p>전통 공동체는 약화되었지만, 집단 정체성과 관계 조정의 논리는 여전히 다른 제도 속에서 재등장한다. 직장 회식, 팀 문화, 팬덤, 동문 네트워크가 그 예다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="quote reveal">
+          <p>홉스테드의 문화 차원은 한국을 '낮은 개인주의 국가'로 설명해 주지만, 최상진의 우리성 이론은 그 내부 작동 방식을 더 세밀하게 보여준다. 즉, 한국 문화는 단순히 집단을 중시하는 것이 아니라, 관계의 밀도와 정서적 연결을 통해 사회적 행동을 조직하는 문화라고 볼 수 있다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="container">
+        <h2>참고문헌</h2>
+        <div class="card reveal">
+          <ol class="ref-list">
+            <li>
+              <span>
+                <span class="ref-authors">최상진</span>
+                <span class="ref-year"> (2011). </span>
+                <span class="ref-title">한국인의 심리학.</span>
+                <span class="ref-source"> 서울: 학지사.</span>
+              </span>
+            </li>
+            <li>
+              <span>
+                <span class="ref-authors">최인재·최상진</span>
+                <span class="ref-year"> (2002). </span>
+                한국인의 문화심리적 특성이 문제대응방식, 스트레스, 생활만족도에 미치는 영향: 정(情), 우리성을 중심으로.
+                <span class="ref-source"> 한국심리학회지: 상담 및 심리치료, 14(1), 55–82.</span>
+              </span>
+            </li>
+            <li>
+              <span>
+                <span class="ref-authors">이준웅·박혜원</span>
+                <span class="ref-year"> (2019). </span>
+                한국적 집단주의(우리성, we-ness)가 대인 커뮤니케이션에 미치는 영향에 대한 연구.
+                <span class="ref-source"> 한국콘텐츠학회논문지, 19(5), 553–566.</span>
+              </span>
+            </li>
+            <li>
+              <span>
+                <span class="ref-authors">정태연·공수연·이은경</span>
+                <span class="ref-year"> (2010). </span>
+                한국사회의 집단주의적 성격에 대한 역사·문화적 분석.
+                <span class="ref-source"> 한국행정논집, 24(3), 765–793.</span>
+              </span>
+            </li>
+            <li>
+              <span>
+                <span class="ref-authors">Hofstede, G.</span>
+                <span class="ref-year"> (1980). </span>
+                <span class="ref-title">Culture's Consequences: International Differences in Work-Related Values.</span>
+                <span class="ref-source"> Beverly Hills, CA: SAGE Publications.</span>
+              </span>
+            </li>
+            <li>
+              <span>
+                <span class="ref-authors">Hofstede, G., Hofstede, G. J., &amp; Minkov, M.</span>
+                <span class="ref-year"> (2010). </span>
+                <span class="ref-title">Cultures and Organizations: Software of the Mind</span> (3rd ed.).
+                <span class="ref-source"> New York: McGraw-Hill. [한국 IDV 18, PDI 60, UAI 85 수치 출처]</span>
+              </span>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">학번 1111 &nbsp;·&nbsp; 안아라</div>
+  </footer>
+
+  <script>
+    const root = document.documentElement;
+    const toggle = document.querySelector('[data-theme-toggle]');
+    toggle.addEventListener('click',()=>{
+      root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      buildCharts();
+    });
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, {threshold:0.15});
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    let radar, bar;
+    function axisColor(){ return getComputedStyle(document.documentElement).getPropertyValue('--color-text-muted').trim(); }
+    function primary(){ return getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(); }
+    function accent(){ return getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim(); }
+    function blue(){ return getComputedStyle(document.documentElement).getPropertyValue('--color-blue').trim(); }
+
+    function buildCharts(){
+      radar && radar.destroy();
+      bar && bar.destroy();
+      radar = new Chart(document.getElementById('radarChart'), {
+        type:'radar',
+        data:{
+          labels:['공유 정체성','집단주의','경계 투과성','정(情)','눈치','심리적 지지'],
+          datasets:[
+            {label:'한국의 우리성',data:[92,84,78,94,88,86],backgroundColor:primary()+'33',borderColor:primary(),pointBackgroundColor:primary(),borderWidth:2},
+            {label:'서구 개인주의 문화',data:[38,24,41,35,29,44],backgroundColor:accent()+'22',borderColor:accent(),pointBackgroundColor:accent(),borderWidth:2}
+          ]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:axisColor(),font:{family:'IBM Plex Sans KR'}}}},scales:{r:{angleLines:{color:axisColor()+'33'},grid:{color:axisColor()+'22'},pointLabels:{color:axisColor(),font:{family:'IBM Plex Sans KR',size:12}},ticks:{display:false},suggestedMin:0,suggestedMax:100}}}
+      });
+      bar = new Chart(document.getElementById('barChart'), {
+        type:'bar',
+        data:{
+          labels:['권력거리 PDI','개인주의 IDV','불확실성 회피 UAI','장기지향 LTO'],
+          datasets:[
+            {label:'한국',data:[60,18,85,75],backgroundColor:primary()},
+            {label:'미국',data:[40,91,46,29],backgroundColor:blue()}
+          ]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:axisColor(),font:{family:'IBM Plex Sans KR'}}}},scales:{x:{ticks:{color:axisColor(),font:{family:'IBM Plex Sans KR'}},grid:{display:false}},y:{beginAtZero:true,max:100,ticks:{color:axisColor()},grid:{color:axisColor()+'22'}}}}
+      });
+    }
+    buildCharts();
+  </script>
+</body>
+</html>
